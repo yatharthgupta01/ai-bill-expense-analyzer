@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Environment/secrets
+.env
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Streamlit
+.streamlit/secrets.toml
+
+# ML/cache
+.cache/
+huggingface_cache/
+models/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# User uploads
+uploads/
+
+# Generated reports
+reports/
+
+# Generated sample/cache files
+data/__pycache__/
