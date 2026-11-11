@@ -1,8 +1,7 @@
 # 💳 AI Bill & Expense Analyzer
 
-An academic-grade, end-to-end personal finance intelligence system that extracts structured expense data from physical and digital bills (PDF, JPG, PNG), applies zero-shot semantic categorization, enforces mathematical consistency, tracks category budgets with automated warning alerts, and leverages **Pretrained Transformer-based Generative AI models** for natural-language spending summaries, anomaly detection, behavioral pattern explanations, interactive question-answering, and downloadable monthly PDF reports.
+An end-to-end personal finance intelligence system that extracts structured expense data from physical and digital bills (PDF, JPG, PNG), applies zero-shot semantic categorization, enforces mathematical consistency, tracks category budgets with automated warning alerts, and leverages **Pretrained Transformer-based Generative AI models** for natural-language spending summaries, anomaly detection, behavioral pattern explanations, interactive question-answering, and downloadable monthly PDF reports.
 
-Designed and architected as a college-level capstone project for a 2-person development team.
 
 ---
 
@@ -14,7 +13,7 @@ The **AI Bill & Expense Analyzer** solves this by unifying:
 1. **Document Processing & OCR Extraction** (handling printed receipts, digital invoices, and scanned multi-line bills).
 2. **Deterministic Arithmetic Balancing & Validation** (distinguishing Subtotal, Tax/GST, Discounts, Additional Charges, and Total).
 3. **Semantic Zero-Shot Categorization** (using transformer sentence embeddings).
-4. **Pretrained Generative AI & Prompt Engineering** (providing grounded, zero-hallucination spending narratives, behavioral insights, and interactive conversational financial Q&A).
+4. **Pretrained Generative AI & Prompt Engineering** (providing grounded spending narratives, behavioral insights, and interactive conversational financial Q&A).
 5. **Comprehensive Budgeting & Formal PDF Report Generation**.
 
 ---
@@ -28,7 +27,7 @@ The **AI Bill & Expense Analyzer** solves this by unifying:
 - **Budget Tracking & Alerting**: Monitor overall monthly and category-specific spending limits with automated warnings at 85% and 100% thresholds.
 - **Generative AI Analysis**: Utilize pretrained Transformer architectures (Local FLAN-T5, Grounded Contextual Engine, or Cloud APIs) to generate executive summaries, anomaly insights, pattern explanations, and optimization tips.
 - **Conversational Grounded Q&A**: Provide an interactive natural-language assistant answering queries like *"Where did I spend the most this month?"* strictly grounded in database facts.
-- **Formal PDF Reporting**: Compile publication-grade monthly financial reports with automated KPI tables and AI narratives.
+- **Formal PDF Reporting**: Compile structured monthly financial reports with automated KPI tables and AI narratives.
 - **Academic Quantitative Evaluation**: Benchmark extraction precision and evaluate Generative AI hallucination rate against ground-truth receipts.
 
 ---
@@ -91,14 +90,14 @@ flowchart TD
 > Generative AI is specifically used for natural-language synthesis, spending habit explanations, contextual pattern mining, question-answering, and monthly narrative generation. Simple numeric aggregations, SQL queries, and OCR are clearly separated from the Generative AI inference layer.
 
 ### 1. Grounding-First Architecture
-To eliminate financial hallucinations, all numerical statistics (Total spend, transaction count, average transaction, largest single expense, category breakdown, month-over-month percentage change, weekday vs. weekend spend) are **computed deterministically from the SQLite database first**. These verified figures are then passed into strictly constrained prompt templates:
+To reduce financial hallucinations, all numerical statistics (Total spend, transaction count, average transaction, largest single expense, category breakdown, month-over-month percentage change, weekday vs. weekend spend) are **computed deterministically from the SQLite database first**. These verified figures are then passed into strictly constrained prompt templates:
 
 ```text
 Database SQL Query → Computed Aggregates → Context Formatter → Transformer GenAI Model → Natural-Language Narrative
 ```
 
 ### 2. Supported Inference Providers
-- **Grounded Contextual Engine (Offline / Instant)**: High-speed, deterministic transformer-guided synthesis with zero latency and 0.0% hallucination rate. Perfect for offline college lab evaluations.
+- **Grounded Contextual Engine (Offline / Instant)**: High-speed, deterministic contextual synthesis designed for reliable, grounded offline responses. Suitable for offline college lab evaluations.
 - **Local HuggingFace Transformer (`google/flan-t5-small` / `base`)**: Pretrained instruction-following Seq2Seq model running locally via the HuggingFace `pipeline`.
 - **Google Gemini API (`gemini-2.5-flash`)**: High-performance cloud LLM inference using the official `google-genai` SDK.
 - **OpenAI API (`gpt-4o-mini`)**: Alternative cloud provider.
@@ -106,7 +105,7 @@ Database SQL Query → Computed Aggregates → Context Formatter → Transformer
 ### 3. Prompt Engineering & Guardrails
 Dedicated system prompts enforce:
 - **Strict Grounding**: Only state facts and numbers explicitly present in the context.
-- **Zero Hallucination Policy**: If a metric is missing, explicitly inform the user rather than guessing.
+- **Hallucination Guardrail**: If a metric is missing, explicitly inform the user rather than guessing.
 - **Financial Safety**: Clear disclaimers stating that all outputs are for personal spending awareness and do not constitute certified financial or investment advice.
 
 ---
@@ -187,14 +186,14 @@ Category Accuracy:  100.0% (6/6)
 ```
 
 ### 2. Generative AI Factual Consistency Evaluation
-Tested against standard conversational queries ("What was my largest expense?", "How much did I spend on food?", "How many transactions did I make?"):
+Tested against three standard conversational queries ("What was my largest expense?", "How much did I spend on food?", "How many transactions did I make?"):
 ```text
 ======================================================================
 GENERATIVE AI FACTUAL CONSISTENCY EVALUATION
 ======================================================================
-Factual Consistency:   100.0%
-Numerical Correctness: 100.0%
-Hallucination Rate:      0.0%
+Factual Consistency:                    100.0%
+Numerical Correctness:                  100.0%
+Observed Benchmark Mismatch Rate:         0.0%
 ======================================================================
 ```
 

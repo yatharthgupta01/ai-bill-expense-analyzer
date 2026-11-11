@@ -90,6 +90,7 @@ class LocalFlanT5Provider(BaseLLMProvider):
         self._tokenizer = None
         self._model = None
         self._load_error = None
+        self._using_fallback = False
         self._ensure_model()
 
     def _ensure_model(self):
@@ -121,12 +122,14 @@ class LocalFlanT5Provider(BaseLLMProvider):
         return self._model is not None and self._tokenizer is not None
 
     def get_provider_name(self) -> str:
+        if self._using_fallback or not self.is_available():
+            return "Grounded Contextual Engine (Fallback)"
         return f"Local Transformer ({self.model_name})"
 
     def generate(self, prompt: str, system_prompt: Optional[str] = None, max_new_tokens: int = 512) -> str:
         self._ensure_model()
         if not self.is_available():
-            # Fallback smoothly to GroundedLocalProvider if downloading/loading fails
+            self._using_fallback = True
             return GroundedLocalProvider().generate(prompt, system_prompt, max_new_tokens)
 
         try:
@@ -141,9 +144,11 @@ class LocalFlanT5Provider(BaseLLMProvider):
             )
             res = self._tokenizer.decode(outputs[0], skip_special_tokens=True).strip()
             if not res or len(res) < 5:
+                self._using_fallback = True
                 return GroundedLocalProvider().generate(prompt, system_prompt, max_new_tokens)
             return res
         except Exception:
+            self._using_fallback = True
             return GroundedLocalProvider().generate(prompt, system_prompt, max_new_tokens)
 
 
@@ -153,12 +158,16 @@ class GeminiProvider(BaseLLMProvider):
     def __init__(self, api_key: Optional[str] = None, model: str = "gemini-2.5-flash"):
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         self.model = model
+        self._using_fallback = False
 
     def get_provider_name(self) -> str:
+        if self._using_fallback:
+            return "Grounded Contextual Engine (Fallback)"
         return f"Google Gemini ({self.model})"
 
     def generate(self, prompt: str, system_prompt: Optional[str] = None, max_new_tokens: int = 512) -> str:
         if not self.api_key:
+            self._using_fallback = True
             return GroundedLocalProvider().generate(prompt, system_prompt, max_new_tokens)
 
         try:
@@ -176,6 +185,7 @@ class GeminiProvider(BaseLLMProvider):
             return response.text.strip()
         except Exception:
             # Graceful fallback on API failure or quota limit
+            self._using_fallback = True
             return GroundedLocalProvider().generate(prompt, system_prompt, max_new_tokens)
 
 
@@ -185,12 +195,16 @@ class OpenAIProvider(BaseLLMProvider):
     def __init__(self, api_key: Optional[str] = None, model: str = "gpt-4o-mini"):
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
         self.model = os.getenv("OPENAI_MODEL", model)
+        self._using_fallback = False
 
     def get_provider_name(self) -> str:
+        if self._using_fallback:
+            return "Grounded Contextual Engine (Fallback)"
         return f"OpenAI ({self.model})"
 
     def generate(self, prompt: str, system_prompt: Optional[str] = None, max_new_tokens: int = 512) -> str:
         if not self.api_key:
+            self._using_fallback = True
             return GroundedLocalProvider().generate(prompt, system_prompt, max_new_tokens)
 
         try:
@@ -209,6 +223,7 @@ class OpenAIProvider(BaseLLMProvider):
             )
             return response.choices[0].message.content.strip()
         except Exception:
+            self._using_fallback = True
             return GroundedLocalProvider().generate(prompt, system_prompt, max_new_tokens)
 
 

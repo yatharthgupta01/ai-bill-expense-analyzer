@@ -320,17 +320,7 @@ class BillExtractor:
         - OCR corruption of line totals
         """
 
-        # ---------------------------------------------------------
-        # IMPORTANT:
-        # Use the already-corrected monetary extraction to obtain
-        # the real subtotal and total.
-        #
-        # Example OCR:
-        #   Sub Total : 71580.00
-        #
-        # Correct monetary extraction:
-        #   subtotal = 1580.00
-        # ---------------------------------------------------------
+    
         monetary = BillExtractor.extract_monetary_values(text)
 
         subtotal = monetary.get("subtotal", 0.0)
@@ -395,11 +385,6 @@ class BillExtractor:
 
         # ---------------------------------------------------------
         # Correct OCR-corrupted monetary values.
-        #
-        # Examples:
-        #   2150 -> 150
-        #   2120 -> 120
-        #
         # The correction is only applied when the value is larger
         # than the actual bill amount.
         # ---------------------------------------------------------
@@ -412,10 +397,7 @@ class BillExtractor:
 
             # Example:
             # 2120 -> 120
-            # 2150 -> 150
-            #
-            # Keep removing the leading OCR character/digit until
-            # the amount becomes reasonable for this receipt.
+
             candidate = str(int(value))
 
             while (
@@ -429,17 +411,7 @@ class BillExtractor:
             except ValueError:
                 return value
 
-        # ---------------------------------------------------------
-        # Extract numeric values from an OCR line.
-        #
-        # This intentionally allows OCR text such as:
-        #
-        #   M0
-        #   Z40
-        #   %220
-        #
-        # because the numeric portion can still be recovered.
-        # ---------------------------------------------------------
+
         def extract_numbers(line: str) -> List[float]:
             matches = re.findall(
                 r"\d+(?:[.,]\d{1,2})?",
@@ -467,14 +439,6 @@ class BillExtractor:
         # ---------------------------------------------------------
         for line in item_lines:
 
-            # Find the first number anywhere in the line.
-            #
-            # This is important for OCR such as:
-            #
-            # HANDIPANEER =—Oi2~...
-            #
-            # where the quantity is attached to corrupted OCR
-            # characters rather than separated cleanly.
             qty_match = re.search(r"(\d+)", line)
 
             if not qty_match:
@@ -488,10 +452,8 @@ class BillExtractor:
             if quantity <= 0:
                 continue
 
-            # Everything before the quantity is the item name.
             raw_name = line[:qty_match.start()]
 
-            # Remove OCR punctuation/noise.
             name = re.sub(
                 r"[^A-Za-z0-9&./\-\s]",
                 " ",
@@ -500,8 +462,6 @@ class BillExtractor:
 
             name = re.sub(r"\s+", " ", name).strip()
 
-            # Remove small OCR fragments that sometimes remain
-            # immediately before the quantity.
             name = re.sub(
                 r"\s+(?:O|0|Oi|Ol|i)\s*$",
                 "",
@@ -512,8 +472,6 @@ class BillExtractor:
             if len(name) < 2:
                 continue
 
-            # Ignore obvious non-item text.
-            # Ignore invoice/header information that can contain numbers.
             if re.search(
                 r"(?:tax\s+invoice|invoice|bill\s*(?:no|number)?|"
                 r"date\s*:|t\.?\s*no\.?|w\.?\s*no\.?|"
@@ -523,13 +481,10 @@ class BillExtractor:
             ):
                 continue
 
-            # Extract everything after the quantity.
             remaining_text = line[qty_match.end():]
 
             numbers = extract_numbers(remaining_text)
 
-            # If OCR repeated the quantity as a fake numeric value,
-            # don't treat that quantity as a price.
             if (
                 len(numbers) == 1
                 and numbers[0] == quantity
@@ -539,59 +494,22 @@ class BillExtractor:
             unit_price = 0.0
             total_price = 0.0
 
-            # -----------------------------------------------------
-            # Two numeric values:
-            #
-            #   Qty  UnitPrice  Total
-            #
-            # Example:
-            #   2  2150  300
-            #
-            # becomes:
-            #   2  150  300
-            # -----------------------------------------------------
             if len(numbers) >= 2:
 
                 unit_price = numbers[-2]
                 total_price = numbers[-1]
 
-            # -----------------------------------------------------
-            # One numeric value:
-            #
-            # Usually this is the total amount.
-            # Unit price can then be calculated from quantity.
-            # -----------------------------------------------------
+
             elif len(numbers) == 1:
 
                 total_price = numbers[0]
 
-            # -----------------------------------------------------
-            # No usable numeric values.
-            #
-            # The amount will be recovered later from the subtotal
-            # if this is the only missing item.
-            # -----------------------------------------------------
+
             else:
                 unit_price = 0.0
                 total_price = 0.0
 
-            # -----------------------------------------------------
-            # Recover corrupted/missing unit prices.
-            #
-            # Examples:
-            #
-            # PLAIN RAITA 2 M0 220
-            # -> unit = 110, total = 220
-            #
-            # JEERA RICE 2 10 220
-            # -> OCR unit 10 is inconsistent with 220/2,
-            #    so use 110.
-            #
-            # TANDURI ROTI BUTTER 8 5 120
-            # -> Keep ₹5 because the receipt explicitly gives
-            #    ₹120 as its line total and the mismatch is not
-            #    extreme enough to assume OCR corruption.
-            # -----------------------------------------------------
+
             if quantity > 0 and total_price > 0:
 
                 implied_unit_price = round(
@@ -620,24 +538,7 @@ class BillExtractor:
                 }
             )
 
-        # ---------------------------------------------------------
-        # Recover a completely missing item amount.
-        #
-        # Example:
-        #
-        # Known items:
-        #   300 + 220 + 220 + 120 + 120 + 200
-        #   = 1180
-        #
-        # Receipt subtotal:
-        #   1580
-        #
-        # Missing:
-        #   1580 - 1180 = 400
-        #
-        # For HANDIPANEER quantity = 2:
-        #   400 / 2 = 200
-        # ---------------------------------------------------------
+
         if subtotal > 0 and parsed_items:
 
             known_total = round(

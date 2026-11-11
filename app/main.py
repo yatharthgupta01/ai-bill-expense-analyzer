@@ -134,8 +134,7 @@ def main():
                 st.success("Sample data loaded!")
                 st.rerun()
 
-        st.markdown("---")
-        st.caption("College Mini Project - GenAI & OCR")
+       
 
     # Routing to Pages
     if page == "📊 Dashboard":
